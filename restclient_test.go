@@ -26,10 +26,10 @@ func TestHeader(t *testing.T) {
 	h := &H{}
 	r, _ := New().
 		Get("http://httpbin.org/headers").
-		Header("TestHader", "value").
+		Header("testHeader", "value").
 		UnmarshalJson(h)
 	assert.Equal(t, 200, r.StatusCode)
-	assert.Equal(t, "value", h.Headers.TestHader)
+	assert.Equal(t, "value", h.Headers.TestHeader)
 }
 
 func TestDoJsonSuccess(t *testing.T) {
@@ -135,7 +135,7 @@ func TestLogger(t *testing.T) {
 	r, _ := New().
 		Logger(log.New(os.Stdout, "", log.LstdFlags)).
 		Get("http://httpbin.org/get").
-		Query("Param1", "value").
+		QuerySet("Param1", "value").
 		UnmarshalJson(h)
 	assert.Equal(t, 200, r.StatusCode)
 	assert.Equal(t, "value", h.Args.Param1)
@@ -145,11 +145,11 @@ func TestLogger(t *testing.T) {
 /*
    apiUrl := "https://api.com"
     resource := "/user/"
-    data := url.Values{}
+    data := Url.Values{}
     data.Set("name", "foo")
     data.Set("surname", "bar")
 
-    u, _ := url.ParseRequestURI(apiUrl)
+    u, _ := Url.ParseRequestURI(apiUrl)
     u.Path = resource
     urlStr := u.String() // "https://api.com/user/"
 
@@ -161,4 +161,4 @@ func TestLogger(t *testing.T) {
 
     resp, _ := client.Do(r)
     fmt.Println(resp.Status)
- */
+*/

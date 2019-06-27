@@ -39,11 +39,7 @@ func (b *Builder) newJsonRequest() *http.Request {
 	}
 
 	//Set Query
-	q := req.URL.Query()
-	for k, v := range b.Querys {
-		q.Add(k, v)
-	}
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = b.Queries.Encode()
 
 	if b.basicAuth != (auth{}) {
 		req.SetBasicAuth(b.basicAuth.username, b.basicAuth.password)

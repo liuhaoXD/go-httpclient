@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/liuhaoXD/go-httpclient/mimetype"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"reflect"
 	"time"
@@ -21,8 +21,8 @@ type Builder struct {
 	Method    string
 	Path      string
 	Headers   map[string]string
-	Querys    map[string]string
-	DebugMode bool
+	Queries   url.Values
+	debugMode bool
 
 	logger    *log.Logger
 	timeout   time.Duration
@@ -34,7 +34,7 @@ type Builder struct {
 func New() *Builder {
 	return &Builder{
 		Headers: make(map[string]string),
-		Querys:  make(map[string]string),
+		Queries: make(url.Values),
 		logger:  log.New(os.Stdout, "", log.LstdFlags),
 		timeout: time.Duration(20 * time.Second),
 	}
@@ -81,9 +81,15 @@ func (b *Builder) Header(key, value string) *Builder {
 	return b
 }
 
-// Query sets http QUERY parameter key with value and returns Builder.
-func (b *Builder) Query(key, value string) *Builder {
-	b.Querys[key] = value
+// QuerySet sets http QUERY parameter key with value returns Builder.
+func (b *Builder) QuerySet(key string, value string) *Builder {
+	b.Queries.Set(key, value)
+	return b
+}
+
+// QueryAdd adds http QUERY parameter key with value and returns Builder.
+func (b *Builder) QueryAdd(key, value string) *Builder {
+	b.Queries.Add(key, value)
 	return b
 }
 
@@ -97,7 +103,7 @@ func (b *Builder) Do() (*http.Response, error) {
 
 	request := b.newRequest()
 
-	if b.DebugMode {
+	if b.debugMode {
 		dump, _ := httputil.DumpRequest(request, true)
 		b.logger.Println(string(dump))
 	}
@@ -107,7 +113,7 @@ func (b *Builder) Do() (*http.Response, error) {
 		return nil, err
 	}
 
-	if b.DebugMode {
+	if b.debugMode {
 		dump, _ := httputil.DumpResponse(resp, true)
 		b.logger.Println(string(dump))
 	}
@@ -135,16 +141,16 @@ func (b *Builder) BasicAuth(username, password string) *Builder {
 
 func (b *Builder) valid() error {
 	if len(b.Url) == 0 {
-		return errors.New("url is empty")
+		return ErrUrlIsEmpty
 	}
 	if b.logger == nil {
-		return errors.New("logger is empty")
+		return ErrLoggerIsEmpty
 	}
 	return nil
 }
 
 func (b *Builder) Debug(debug bool) *Builder {
-	b.DebugMode = debug
+	b.debugMode = debug
 	return b
 }
 
@@ -153,6 +159,7 @@ type auth struct {
 	password string
 }
 
+// Body convert v to []byte and using ad http request body
 func (b *Builder) Body(v interface{}) *Builder {
 	rv := reflect.ValueOf(v)
 
@@ -187,12 +194,7 @@ func (b *Builder) newRequest() *http.Request {
 		req.Header.Set(k, v)
 	}
 
-	//Set Query
-	q := req.URL.Query()
-	for k, v := range b.Querys {
-		q.Add(k, v)
-	}
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = b.Queries.Encode()
 
 	if b.basicAuth != (auth{}) {
 		req.SetBasicAuth(b.basicAuth.username, b.basicAuth.password)
