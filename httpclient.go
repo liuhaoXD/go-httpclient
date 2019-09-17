@@ -101,7 +101,10 @@ func (b *Builder) Do() (*http.Response, error) {
 
 	client := &http.Client{Timeout: b.timeout}
 
-	request := b.newRequest()
+	request, err := b.newRequest()
+	if err != nil {
+		return nil, err
+	}
 
 	if b.debugMode {
 		dump, _ := httputil.DumpRequest(request, true)
@@ -118,7 +121,11 @@ func (b *Builder) Do() (*http.Response, error) {
 		b.logger.Println(string(dump))
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	return resp, resp.Body.Close()
 }
@@ -170,19 +177,25 @@ func (b *Builder) Body(v interface{}) *Builder {
 		sliceValue, _ := rv.Interface().([]byte)
 		b.bodyByte = sliceValue
 	case reflect.Map, reflect.Struct, reflect.Ptr:
-		byteValue, _ := json.Marshal(v)
+		byteValue, err := json.Marshal(v)
+		if err != nil {
+			log.Println("failed to marshal body ", err)
+		}
 		b.bodyByte = byteValue
 	}
 	return b
 }
 
-func (b *Builder) newRequest() *http.Request {
+func (b *Builder) newRequest() (*http.Request, error) {
 	var reader io.Reader
 	if len(b.bodyByte) > 0 {
 		reader = bytes.NewBuffer(b.bodyByte)
 	}
 
-	req, _ := http.NewRequest(b.Method, b.Url, reader)
+	req, err := http.NewRequest(b.Method, b.Url, reader)
+	if err != nil {
+		return nil, err
+	}
 
 	//Set Default Content-Type Header
 	if len(req.Header.Get("Content-Type")) == 0 {
@@ -200,5 +213,5 @@ func (b *Builder) newRequest() *http.Request {
 		req.SetBasicAuth(b.basicAuth.username, b.basicAuth.password)
 	}
 
-	return req
+	return req, nil
 }
