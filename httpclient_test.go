@@ -101,3 +101,26 @@ func TestBasicAuth(t *testing.T) {
 		Do()
 	assert.Equal(t, 200, r.StatusCode)
 }
+
+func TestUrlEncodedBody(t *testing.T) {
+	body := make(map[string]string)
+	body["aaa"] = "bbb"
+	body["ccc"] = "ddd"
+	body["eee"] = "fff"
+	r, _ := New().
+		ContentType(mimetype.ApplicationFormUrlencoded).
+		Post("http://httpbin.org/post").
+		UrlEncodedBody(body).
+		Do()
+	assert.Equal(t, 200, r.StatusCode)
+}
+
+func TestUrlEncodedBodyWithEmptyBody(t *testing.T) {
+	body := make(map[string]string)
+	r, _ := New().
+		ContentType(mimetype.ApplicationFormUrlencoded).
+		Post("http://httpbin.org/post").
+		UrlEncodedBody(body).
+		Do()
+	assert.Equal(t, 200, r.StatusCode)
+}

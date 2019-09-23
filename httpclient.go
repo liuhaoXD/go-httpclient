@@ -93,6 +93,11 @@ func (b *Builder) QueryAdd(key, value string) *Builder {
 	return b
 }
 
+func (b *Builder) ContentType(mimeType string) *Builder {
+	b.Header("Content-Type", mimeType)
+	return b
+}
+
 // Do executes the http request client and returns http.Response and error.
 func (b *Builder) Do() (*http.Response, error) {
 	if err := b.valid(); err != nil {
@@ -176,6 +181,43 @@ func (b *Builder) Body(v interface{}) *Builder {
 	case reflect.Slice:
 		sliceValue, _ := rv.Interface().([]byte)
 		b.bodyByte = sliceValue
+	case reflect.Map, reflect.Struct, reflect.Ptr:
+		byteValue, err := json.Marshal(v)
+		if err != nil {
+			log.Println("failed to marshal body ", err)
+		}
+		b.bodyByte = byteValue
+	}
+	return b
+}
+
+func (b *Builder) UrlEncodedBody(v map[string]string) *Builder {
+	var buffer bytes.Buffer
+	if len(v) > 0 {
+		i := 0
+		for key, val := range v {
+			buffer.WriteString(key)
+			buffer.WriteByte('=')
+			buffer.WriteString(val)
+			if i < len(v)-1 {
+				buffer.WriteByte('&')
+				i++
+			}
+		}
+		b.bodyByte = buffer.Bytes()
+	}
+	return b
+}
+
+func (b *Builder) StringBody(v string) *Builder {
+	b.bodyByte = []byte(v)
+	return b
+}
+
+func (b *Builder) JsonBody(v interface{}) *Builder {
+	rv := reflect.ValueOf(v)
+
+	switch rv.Kind() {
 	case reflect.Map, reflect.Struct, reflect.Ptr:
 		byteValue, err := json.Marshal(v)
 		if err != nil {

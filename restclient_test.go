@@ -120,7 +120,7 @@ func TestDebugMode(t *testing.T) {
 	}{"ok"}
 
 	r, _ := New().
-		Debug(true).
+		Debug(false).
 		Header("h", "v").
 		Post("http://httpbin.org/post").
 		Body(b).
