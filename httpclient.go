@@ -230,8 +230,9 @@ func (b *Builder) JsonBody(v interface{}) *Builder {
 	return b
 }
 
-func (b *Builder) AddInterceptor(f func(r *http.Request)) {
+func (b *Builder) AddInterceptor(f func(r *http.Request)) *Builder {
 	b.interceptors = append(b.interceptors, f)
+	return b
 }
 
 func (b *Builder) newRequest() (*http.Request, error) {
