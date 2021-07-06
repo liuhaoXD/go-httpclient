@@ -1,13 +1,14 @@
 package httpclient
 
 import (
-	"github.com/liuhaoXD/go-httpclient/mimetype"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/liuhaoxd/go-httpclient/mimetype"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPost(t *testing.T) {

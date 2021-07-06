@@ -3,10 +3,11 @@ package httpclient
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/liuhaoXD/go-httpclient/mimetype"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/liuhaoxd/go-httpclient/mimetype"
 )
 
 // UnmarshalJson executes the http request client and returns http.Response and error.

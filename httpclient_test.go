@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/liuhaoXD/go-httpclient/mimetype"
+	"github.com/liuhaoxd/go-httpclient/mimetype"
 	"github.com/stretchr/testify/assert"
 )
 

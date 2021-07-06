@@ -3,7 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/liuhaoXD/go-httpclient/mimetype"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/liuhaoxd/go-httpclient/mimetype"
 )
 
 // Builder is a object that help to build fluent style API.
@@ -24,10 +25,11 @@ type Builder struct {
 	Queries   url.Values
 	debugMode bool
 
-	logger    *log.Logger
-	timeout   time.Duration
-	basicAuth auth
-	bodyByte  []byte
+	logger       *log.Logger
+	timeout      time.Duration
+	basicAuth    auth
+	bodyByte     []byte
+	interceptors []func(r *http.Request)
 }
 
 // New returns an new Builder object.
@@ -36,7 +38,7 @@ func New() *Builder {
 		Headers: make(map[string]string),
 		Queries: make(url.Values),
 		logger:  log.New(os.Stdout, "", log.LstdFlags),
-		timeout: time.Duration(20 * time.Second),
+		timeout: 20 * time.Second,
 	}
 }
 
@@ -228,6 +230,10 @@ func (b *Builder) JsonBody(v interface{}) *Builder {
 	return b
 }
 
+func (b *Builder) AddInterceptor(f func(r *http.Request)) {
+	b.interceptors = append(b.interceptors, f)
+}
+
 func (b *Builder) newRequest() (*http.Request, error) {
 	var reader io.Reader
 	if len(b.bodyByte) > 0 {
@@ -255,5 +261,10 @@ func (b *Builder) newRequest() (*http.Request, error) {
 		req.SetBasicAuth(b.basicAuth.username, b.basicAuth.password)
 	}
 
+	if len(b.interceptors) > 0 {
+		for _, interceptor := range b.interceptors {
+			interceptor(req)
+		}
+	}
 	return req, nil
 }
